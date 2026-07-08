@@ -1,7 +1,11 @@
 package com.openclassrooms.tourguide;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
+import com.openclassrooms.tourguide.dto.NearbyAttractionDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +25,8 @@ public class TourGuideController {
 
 	@Autowired
 	TourGuideService tourGuideService;
+
+    private final Executor executor = Executors.newFixedThreadPool(20);
 	
     @RequestMapping("/")
     public String index() {
@@ -42,9 +48,10 @@ public class TourGuideController {
         // The reward points for visiting each Attraction.
         //    Note: Attraction reward points can be gathered from RewardsCentral
     @RequestMapping("/getNearbyAttractions") 
-    public List<Attraction> getNearbyAttractions(@RequestParam String userName) {
-    	VisitedLocation visitedLocation = tourGuideService.getUserLocation(getUser(userName));
-    	return tourGuideService.getNearByAttractions(visitedLocation);
+    public CompletableFuture<List<NearbyAttractionDto>> getNearbyAttractions(@RequestParam String userName) {
+        	return CompletableFuture.supplyAsync(() ->
+                    tourGuideService.getClosestAttractions(getUser(userName)),
+                    executor);
     }
     
     @RequestMapping("/getRewards") 

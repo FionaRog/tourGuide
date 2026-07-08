@@ -1,5 +1,6 @@
 package com.openclassrooms.tourguide.service;
 
+import com.openclassrooms.tourguide.dto.NearbyAttractionDto;
 import com.openclassrooms.tourguide.helper.InternalTestHelper;
 import com.openclassrooms.tourguide.tracker.Tracker;
 import com.openclassrooms.tourguide.user.User;
@@ -95,6 +96,7 @@ public class TourGuideService {
 		return visitedLocation;
 	}
 
+	// A SUPPRIMER ?
 	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
 		List<Attraction> nearbyAttractions = new ArrayList<>();
 		for (Attraction attraction : gpsUtil.getAttractions()) {
@@ -104,6 +106,30 @@ public class TourGuideService {
 		}
 
 		return nearbyAttractions;
+	}
+
+	public List<NearbyAttractionDto> getClosestAttractions(User user) {
+		VisitedLocation visitedLocation = getUserLocation(user);
+
+		List<Attraction> attractions = gpsUtil.getAttractions();
+
+		List<NearbyAttractionDto> closestAttractions = attractions.stream()
+				.map(attraction -> {
+					NearbyAttractionDto dto = new NearbyAttractionDto();
+					dto.setAttractionName(attraction.attractionName);
+					dto.setAttractionLatitude(attraction.latitude);
+					dto.setAttractionLongitude(attraction.longitude);
+					dto.setUserLatitude(visitedLocation.location.latitude);
+					dto.setUserLongitude(visitedLocation.location.longitude);
+					dto.setDistanceMiles(rewardsService.getDistance(attraction, visitedLocation.location));
+					dto.setRewardsPoints(rewardsService.getRewardPoints(attraction, user));
+					return dto;
+				})
+				.sorted((a, b) -> Double.compare(a.getDistanceMiles(), b.getDistanceMiles()))
+				.limit(5)
+				.collect(Collectors.toList());
+
+		return closestAttractions;
 	}
 
 	private void addShutDownHook() {
