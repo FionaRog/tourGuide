@@ -40,7 +40,8 @@ public class TourGuideService {
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
-	private final Executor executor = Executors.newFixedThreadPool(20);
+	// mettre dans la config mais pas obligé
+	private final Executor gpsExecutor = Executors.newFixedThreadPool(20);
 
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
@@ -92,23 +93,23 @@ public class TourGuideService {
 		return providers;
 	}
 
-	public synchronized VisitedLocation trackUserLocation(User user) {
-		VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
-		user.addToVisitedLocations(visitedLocation);
-		rewardsService.calculateRewards(user);
-		return visitedLocation;
+	public VisitedLocation trackUserLocation(User user) {
+		return trackUsersLocations(List.of(user)).get(0);
 	}
 
-	// A SUPPRIMER ?
-	public List<Attraction> getNearByAttractions(VisitedLocation visitedLocation) {
-		List<Attraction> nearbyAttractions = new ArrayList<>();
-		for (Attraction attraction : gpsUtil.getAttractions()) {
-			if (rewardsService.isWithinAttractionProximity(attraction, visitedLocation.location)) {
-				nearbyAttractions.add(attraction);
-			}
-		}
+	public List<VisitedLocation> trackUsersLocations(List<User> users) {
+		List<CompletableFuture<VisitedLocation>> futures = users.stream()
+				.map(user -> CompletableFuture.supplyAsync(() -> {
+					VisitedLocation visitedLocation = gpsUtil.getUserLocation(user.getUserId());
+					user.addToVisitedLocations(visitedLocation);
+					rewardsService.calculateRewards(user);
+					return visitedLocation;
+				}, gpsExecutor))
+				.toList();
 
-		return nearbyAttractions;
+		return futures.stream()
+				.map(CompletableFuture::join)
+				.toList();
 	}
 
 	public CompletableFuture<List<NearbyAttractionDto>> getClosestAttractions(User user) {
@@ -132,7 +133,7 @@ public class TourGuideService {
 				.limit(5)
 				.collect(Collectors.toList());
 
-		return CompletableFuture.supplyAsync(() -> closestAttractions, executor);
+		return CompletableFuture.supplyAsync(() -> closestAttractions, gpsExecutor);
 	}
 
 	private void addShutDownHook() {

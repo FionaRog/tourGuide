@@ -1,8 +1,6 @@
 package com.openclassrooms.tourguide.user;
 
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import gpsUtil.location.VisitedLocation;
@@ -18,6 +16,7 @@ public class User {
 	private List<UserReward> userRewards = new CopyOnWriteArrayList<>();
 	private UserPreferences userPreferences = new UserPreferences();
 	private List<Provider> tripDeals = new CopyOnWriteArrayList<>();
+	private final Set<String> rewardKeys = new HashSet<>();
 	public User(UUID userId, String userName, String phoneNumber, String emailAddress) {
 		this.userId = userId;
 		this.userName = userName;
@@ -68,9 +67,12 @@ public class User {
 	public void clearVisitedLocations() {
 		visitedLocations.clear();
 	}
-	
+
+	//modifié car comparaison entre un String et Attraction , fait échouer le test + set pour performance++
 	public synchronized void addUserReward(UserReward userReward) {
-		if(userRewards.stream().filter(r -> !r.attraction.attractionName.equals(userReward.attraction)).count() == 0) {
+		String key = userReward.attraction.attractionName;
+
+		if(rewardKeys.add(key)) {
 			userRewards.add(userReward);
 		}
 	}

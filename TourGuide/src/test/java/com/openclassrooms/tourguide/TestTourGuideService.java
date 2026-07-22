@@ -31,9 +31,10 @@ public class TestTourGuideService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+		List<VisitedLocation> visitedLocation = tourGuideService.trackUsersLocations(List.of(user));
 		tourGuideService.tracker.stopTracking();
-		assertTrue(visitedLocation.userId.equals(user.getUserId()));
+		assertTrue(visitedLocation.get(0).userId.equals(user.getUserId()));
+		assertEquals(1, visitedLocation.size());
 	}
 
 	@Test
@@ -87,11 +88,12 @@ public class TestTourGuideService {
 		TourGuideService tourGuideService = new TourGuideService(gpsUtil, rewardsService);
 
 		User user = new User(UUID.randomUUID(), "jon", "000", "jon@tourGuide.com");
-		VisitedLocation visitedLocation = tourGuideService.trackUserLocation(user);
+		List<VisitedLocation> visitedLocation = tourGuideService.trackUsersLocations(List.of(user));
 
 		tourGuideService.tracker.stopTracking();
 
-		assertEquals(user.getUserId(), visitedLocation.userId);
+		assertTrue(visitedLocation.get(0).userId.equals(user.getUserId()));
+		assertEquals(1, visitedLocation.size());
 	}
 
 	 // Not yet implemented

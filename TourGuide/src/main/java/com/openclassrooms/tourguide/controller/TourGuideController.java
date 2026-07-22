@@ -1,10 +1,9 @@
-package com.openclassrooms.tourguide;
+package com.openclassrooms.tourguide.controller;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-import com.openclassrooms.tourguide.dto.NearbyAttractionDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,8 +42,8 @@ public class TourGuideController {
         // The reward points for visiting each Attraction.
         //    Note: Attraction reward points can be gathered from RewardsCentral
     @RequestMapping("/getNearbyAttractions") 
-    public CompletableFuture<List<NearbyAttractionDto>> getNearbyAttractions(@RequestParam String userName) {
-        	return tourGuideService.getClosestAttractions(getUser(userName));
+    public ResponseEntity getNearbyAttractions(@RequestParam String userName) {
+        	return ResponseEntity.ok().body(tourGuideService.getClosestAttractions(getUser(userName)));
     }
     
     @RequestMapping("/getRewards") 
