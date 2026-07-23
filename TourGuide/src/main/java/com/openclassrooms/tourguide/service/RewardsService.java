@@ -2,7 +2,10 @@ package com.openclassrooms.tourguide.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,7 @@ public class RewardsService {
 	private int attractionProximityRange = 200;
 	private final GpsUtil gpsUtil;
 	private final RewardCentral rewardsCentral;
+	private final ExecutorService rewardsExecutor = Executors.newFixedThreadPool(500);
 	
 	public RewardsService(GpsUtil gpsUtil, RewardCentral rewardCentral) {
 		this.gpsUtil = gpsUtil;
@@ -38,11 +42,12 @@ public class RewardsService {
 		proximityBuffer = defaultProximityBuffer;
 	}
 
-	// Copie des listes pour résoudre concurentexception
 	public void calculateRewards(User user) {
-		List<VisitedLocation> userLocations = new CopyOnWriteArrayList<>(user.getVisitedLocations());
-		List<Attraction> attractions = new CopyOnWriteArrayList<>(gpsUtil.getAttractions());
-		
+		calculateRewards(user, gpsUtil.getAttractions());
+	}
+	private void calculateRewards(User user, List<Attraction> attractions) {
+		List<VisitedLocation> userLocations = new ArrayList<>(user.getVisitedLocations());
+
 		for(VisitedLocation visitedLocation : userLocations) {
 			for(Attraction attraction : attractions) {
 				if(user.getUserRewards().stream().filter(r -> r.attraction.attractionName.equals(attraction.attractionName)).count() == 0) {
@@ -52,6 +57,19 @@ public class RewardsService {
 				}
 			}
 		}
+	}
+
+	public void calculateRewardsForUsers(List<User> users) {
+		List<Attraction> attractions = gpsUtil.getAttractions();
+
+		List<CompletableFuture<Void>> futures = users.stream()
+				.map(user -> CompletableFuture.runAsync(
+						() -> calculateRewards(user, attractions),
+						rewardsExecutor
+				))
+				.toList();
+
+		futures.forEach(CompletableFuture::join);
 	}
 	
 	public boolean isWithinAttractionProximity(Attraction attraction, Location location) {

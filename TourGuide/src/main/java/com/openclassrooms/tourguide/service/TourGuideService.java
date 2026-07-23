@@ -8,12 +8,9 @@ import com.openclassrooms.tourguide.user.UserReward;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.*;
@@ -41,7 +38,7 @@ public class TourGuideService {
 	public final Tracker tracker;
 	boolean testMode = true;
 	// mettre dans la config mais pas obligé
-	private final Executor gpsExecutor = Executors.newFixedThreadPool(20);
+	private final ExecutorService gpsExecutor = Executors.newFixedThreadPool(20);
 
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
