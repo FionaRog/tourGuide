@@ -1,0 +1,49 @@
+name: TourGuide CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+      branches:
+        - main
+        - develop
+
+jobs:
+  build:
+    name: Compile, test and package
+    runs-on: ubuntu-latest
+
+    steps:
+      #1. Récupère le contenu du dépôt
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #2. Installe Java et configure le cache Maven
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+
+      #3. Vérifie que le projet compile
+      - name: Compile application
+        run: mvn --batch-mode clean compile
+
+      #4. Exécute les tests, hors tests de performance
+      - name: Run tests
+        run: mvn --batch-mode test -Dtest='!TestPerformance'
+
+      #5. Construit le fichier JAR sans rejouer les tests
+      - name: Build artifact
+        run: mvn --batch-mode package -DskipTests
+
+      #6. Enregistre le JAR généré
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tourguide-jar
+          path: target/*.jar
+          if-no-files-found: error
