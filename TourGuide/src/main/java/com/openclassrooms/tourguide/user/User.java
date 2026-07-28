@@ -68,7 +68,6 @@ public class User {
 		visitedLocations.clear();
 	}
 
-	//modifié car comparaison entre un String et Attraction , fait échouer le test + set pour performance++
 	public synchronized void addUserReward(UserReward userReward) {
 		String key = userReward.attraction.attractionName;
 

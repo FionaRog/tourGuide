@@ -37,8 +37,7 @@ public class TourGuideService {
 	private final TripPricer tripPricer = new TripPricer();
 	public final Tracker tracker;
 	boolean testMode = true;
-	// mettre dans la config mais pas obligé
-	private final ExecutorService gpsExecutor = Executors.newFixedThreadPool(20);
+	private final ExecutorService gpsExecutor = Executors.newFixedThreadPool(30);
 
 
 	public TourGuideService(GpsUtil gpsUtil, RewardsService rewardsService) {
