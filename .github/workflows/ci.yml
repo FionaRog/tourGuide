@@ -16,6 +16,10 @@ jobs:
     name: Compile, test and package
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: TourGuide
+
     steps:
       #1. Récupère le contenu du dépôt
       - name: Checkout repository
@@ -46,5 +50,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tourguide-jar
-          path: target/*.jar
+          path: TourGuide/target/*.jar
           if-no-files-found: error
