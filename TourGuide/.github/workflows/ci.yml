@@ -3,12 +3,13 @@ name: TourGuide CI
 on:
   push:
     branches:
-      - main
-      - develop
+      - master
+
   pull_request:
       branches:
-        - main
-        - develop
+        - master
+
+  workflow_dispatch:
 
 jobs:
   build:
