@@ -43,16 +43,16 @@ jobs:
           -Dversion=1.0.0
           -Dpackaging=jar
 
-      - name: Install tripPricer dependency
+      - name: Install TripPricer dependency
         run: >
           mvn --batch-mode install:install-file
-          -Dfile=libs/tripPricer.jar
+          -Dfile=libs/TripPricer.jar
           -DgroupId=tripPricer
           -DartifactId=tripPricer
           -Dversion=1.0.0
           -Dpackaging=jar
 
-      - name: Install rewardCentral dependency
+      - name: Install RewardCentral dependency
         run: >
           mvn --batch-mode install:install-file
           -Dfile=libs/RewardCentral.jar
