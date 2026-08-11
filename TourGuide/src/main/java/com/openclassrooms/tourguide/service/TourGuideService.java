@@ -108,28 +108,36 @@ public class TourGuideService {
 				.toList();
 	}
 
-	public CompletableFuture<List<NearbyAttractionDto>> getClosestAttractions(User user) {
+	public List<NearbyAttractionDto> getClosestAttractions(User user) {
 		VisitedLocation visitedLocation = getUserLocation(user);
+
+		Location userLocation = visitedLocation.location;
 
 		List<Attraction> attractions = gpsUtil.getAttractions();
 
-		List<NearbyAttractionDto> closestAttractions = attractions.stream()
-				.map(attraction -> {
-					NearbyAttractionDto dto = new NearbyAttractionDto();
-					dto.setAttractionName(attraction.attractionName);
-					dto.setAttractionLatitude(attraction.latitude);
-					dto.setAttractionLongitude(attraction.longitude);
-					dto.setUserLatitude(visitedLocation.location.latitude);
-					dto.setUserLongitude(visitedLocation.location.longitude);
-					dto.setDistanceMiles(rewardsService.getDistance(attraction, visitedLocation.location));
-					dto.setRewardsPoints(rewardsService.getRewardPoints(attraction, user));
-					return dto;
-				})
-				.sorted((a, b) -> Double.compare(a.getDistanceMiles(), b.getDistanceMiles()))
-				.limit(5)
-				.collect(Collectors.toList());
+		return CompletableFuture.supplyAsync(() -> attractions.stream()
+						.map(attraction -> {
+							NearbyAttractionDto dto = new NearbyAttractionDto();
+							dto.setAttractionName(attraction.attractionName);
+							dto.setAttractionLatitude(attraction.latitude);
+							dto.setAttractionLongitude(attraction.longitude);
+							dto.setUserLatitude(visitedLocation.location.latitude);
+							dto.setUserLongitude(visitedLocation.location.longitude);
+							dto.setDistanceMiles(rewardsService.getDistance(attraction, visitedLocation.location));
+							return dto;
+						})
+						.sorted((a, b) -> Double.compare(a.getDistanceMiles(), b.getDistanceMiles()))
+						.limit(5)
+						.peek(dto -> {
+							Attraction attraction = attractions.stream()
+									.filter(a -> a.attractionName.equals(dto.getAttractionName()))
+									.findFirst()
+									.orElseThrow();
 
-		return CompletableFuture.supplyAsync(() -> closestAttractions, gpsExecutor);
+							dto.setRewardsPoints(rewardsService.getRewardPoints(attraction, user));
+						})
+						.collect(Collectors.toList()),gpsExecutor)
+						.join();
 	}
 
 	private void addShutDownHook() {
